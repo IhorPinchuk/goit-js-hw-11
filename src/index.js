@@ -1,11 +1,20 @@
 import { NewsApiService } from './js/fechImages';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const refs = {
   formEl: document.querySelector('#search-form'),
   gallery: document.querySelector('.gallery'),
   loadMoreBtn: document.querySelector('.load-more'),
 };
+const simpleLightbox = new SimpleLightbox('.gallery a', {
+  captionSelector: 'img',
+  captionsData: 'alt',
+  captionPosition: 'bottom',
+  captionDelay: 250,
+  scrollZoom: false,
+});
 
 refs.formEl.addEventListener('submit', handleSearch);
 refs.loadMoreBtn.addEventListener('click', handleLoadMore);
@@ -14,67 +23,73 @@ refs.loadMoreBtn.style.display = 'none';
 
 const newsApiService = new NewsApiService();
 
-// console.log(newsApiService);
-
 function handleSearch(e) {
   e.preventDefault();
 
-    if (e.currentTarget.elements.searchQuery.value.trim() === '') {
-       clearGalleryMarkup();
-      return Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    }
+  if (e.currentTarget.elements.searchQuery.value.trim() === '') {
+    clearGalleryMarkup();
+    return Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  }
 
   newsApiService.query = e.currentTarget.elements.searchQuery.value.trim();
-    e.currentTarget.elements.searchQuery.value = '';
-    
-    // refs.loadMoreBtn.disabled = true;
+  e.currentTarget.elements.searchQuery.value = '';
+
   newsApiService.resetPage();
   newsApiService.feschImages().then(hits => {
-      if (hits.hits.length === 0) {
-          
+    console.log(hits);
+    if (hits.length === 0) {
       clearGalleryMarkup();
       return Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
-      } else {
-          clearGalleryMarkup();
-        appendGaleryMarkup(hits);
-        Notify.success(
-        `Hooray! We found ${hits.totalHits} images.`
-          );
-          Notify.info(
-        `${hits.totalHits - (newsApiService.page - 1) * newsApiService.per_page} images left.`
+    } else {
+      clearGalleryMarkup();
+      appendGaleryMarkup(hits);
+      simpleLightbox.refresh();
+      Notify.success(`Hooray! We found ${hits.totalHits} images.`);
+      Notify.info(
+        `${
+          hits.totalHits - (newsApiService.page - 1) * newsApiService.per_page
+        } images left.`
       );
-        console.log(hits);
-        refs.loadMoreBtn.style.display = 'block';
-        // refs.loadMoreBtn.disabled = false;
+      console.log(hits);
+      refs.loadMoreBtn.style.display = 'block';
     }
   });
 }
 
 function handleLoadMore() {
-    refs.loadMoreBtn.style.display = 'none';
-    newsApiService.feschImages().then(hits => {
-    //    hits.totalHits -= (newsApiService.per_page += 40);
-        appendGaleryMarkup(hits);
-        Notify.info(
-        `${hits.totalHits - (newsApiService.page - 1) * newsApiService.per_page} images left.`
+  refs.loadMoreBtn.style.display = 'none';
+  newsApiService.feschImages().then(hits => {
+    if (hits.totalHits <= (newsApiService.page - 1) * newsApiService.per_page) {
+      appendGaleryMarkup(hits);
+      simpleLightbox.refresh();
+      Notify.failure(
+        `We're sorry, but you've reached the end of search results.`
       );
-    //     Notify.success(
-    //     `Hooray! We found ${hits.totalHits - newsApiService.page * newsApiService.per_page} images.`
-    //   );
-        refs.loadMoreBtn.style.display = 'block';
+      refs.loadMoreBtn.style.display = 'none';
+      return;
+    } else {
+      appendGaleryMarkup(hits);
+      simpleLightbox.refresh();
+      Notify.info(
+        `${
+          hits.totalHits - (newsApiService.page - 1) * newsApiService.per_page
+        } images left.`
+      );
+      refs.loadMoreBtn.style.display = 'block';
+    }
   });
 }
 
-function appendGaleryMarkup(hits) {    
-    refs.gallery.insertAdjacentHTML('beforeend', createGalleryMarkup(hits));
+function appendGaleryMarkup(hits) {
+  refs.gallery.insertAdjacentHTML('beforeend', createGalleryMarkup(hits));
 }
 
 function createGalleryMarkup(hits) {
-        
+  console.log(hits);
   return hits.hits
     .map(hit => {
       return `<div class="photo-card">
@@ -102,6 +117,6 @@ function createGalleryMarkup(hits) {
 }
 
 function clearGalleryMarkup() {
-    refs.gallery.innerHTML = '';
-    refs.loadMoreBtn.style.display = 'none';
+  refs.gallery.innerHTML = '';
+  refs.loadMoreBtn.style.display = 'none';
 }
