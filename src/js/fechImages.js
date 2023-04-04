@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 export class NewsApiService {
   constructor() {
@@ -11,7 +12,6 @@ export class NewsApiService {
   #API_KEY = '34901760-7d58d5b4fa3fae593317e5336';
 
   async feschImages() {
-    console.log(this);
     try {
       return await axios
         .get(this.#BASE_URL, {
@@ -26,13 +26,12 @@ export class NewsApiService {
           },
         })
         .then(data => {
-          console.log(data);
           this.incrementPage();
 
           return data.data;
         });
     } catch (error) {
-      console.warn(error.message);
+      Notify.failure(`${error.message}`);
     }
   }
 

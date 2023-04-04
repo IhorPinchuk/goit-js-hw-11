@@ -27,9 +27,9 @@ function handleSearch(e) {
   e.preventDefault();
 
   if (e.currentTarget.elements.searchQuery.value.trim() === '') {
-        return Notify.failure(
+    return Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
-    );    
+    );
   }
 
   newsApiService.query = e.currentTarget.elements.searchQuery.value.trim();
@@ -37,12 +37,23 @@ function handleSearch(e) {
 
   newsApiService.resetPage();
   newsApiService.feschImages().then(hits => {
-    console.log(hits);
     if (hits.length === 0) {
       clearGalleryMarkup();
       return Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
+    } else if (
+      hits.totalHits <=
+      (newsApiService.page - 1) * newsApiService.per_page
+    ) {
+      clearGalleryMarkup();
+      appendGaleryMarkup(hits);
+      simpleLightbox.refresh();
+      Notify.failure(
+        `We're sorry, but you've reached the end of search results.`
+      );
+      refs.loadMoreBtn.style.display = 'none';
+      return;
     } else {
       clearGalleryMarkup();
       appendGaleryMarkup(hits);
@@ -53,7 +64,7 @@ function handleSearch(e) {
           hits.totalHits - (newsApiService.page - 1) * newsApiService.per_page
         } images left.`
       );
-      console.log(hits);
+
       refs.loadMoreBtn.style.display = 'block';
     }
   });
@@ -88,7 +99,6 @@ function appendGaleryMarkup(hits) {
 }
 
 function createGalleryMarkup(hits) {
-  console.log(hits);
   return hits.hits
     .map(hit => {
       return `<div class="photo-card">
