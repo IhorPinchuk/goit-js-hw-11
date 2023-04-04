@@ -27,10 +27,9 @@ function handleSearch(e) {
   e.preventDefault();
 
   if (e.currentTarget.elements.searchQuery.value.trim() === '') {
-    clearGalleryMarkup();
-    return Notify.failure(
+        return Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
-    );
+    );    
   }
 
   newsApiService.query = e.currentTarget.elements.searchQuery.value.trim();
@@ -94,7 +93,7 @@ function createGalleryMarkup(hits) {
     .map(hit => {
       return `<div class="photo-card">
             <a href="${hit.largeImageURL}">
-            <img src="${hit.webformatURL}" alt="${hit.tags}" loading="lazy" width=350 />
+            <img src="${hit.webformatURL}" alt="${hit.tags}" loading="lazy" width=350/>
             </a>
             <div class="info">
                 <p class="info-item">
