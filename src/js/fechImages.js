@@ -31,7 +31,7 @@ export class NewsApiService {
           return data.data;
         });
     } catch (error) {
-      Notify.failure(`${error.message}`);
+      Notify.warning(`${error.message}`);
     }
   }
 
